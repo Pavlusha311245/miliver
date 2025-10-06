@@ -8,7 +8,11 @@ given time.
 ## API documentation
 
 The API documentation can be found on path `/docs/api`
-If you need json you can use the `/docs/api.json` endpoint.
+If you need JSON you can use the `/docs/api.json` endpoint.
+
+## Status endpoint
+
+The status endpoint can be found on path `/up`
 
 ## License
 
