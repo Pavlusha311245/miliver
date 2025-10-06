@@ -1,11 +1,11 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "pavlusha/miliver",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Backend for Miliver",
     "keywords": [
-        "laravel",
-        "framework"
+        "miliver",
+        "laravel"
     ],
     "license": "MIT",
     "require": {
@@ -14,6 +14,7 @@
         "laravel/tinker": "^2.10"
     },
     "require-dev": {
+        "roave/security-advisories": "dev-latest",
         "fakerphp/faker": "^1.24",
         "laravel/pail": "^1.2",
         "laravel/pint": "^1.25",
