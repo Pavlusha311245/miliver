@@ -10,6 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
+        "dedoc/scramble": "^0.12.35",
         "laravel/framework": "^12.32",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10"
