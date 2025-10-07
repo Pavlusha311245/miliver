@@ -18,16 +18,6 @@ use Throwable;
 class ProjectController extends Controller
 {
     /**
-     * The number of items per page.
-     */
-    const int PER_PAGE = 10;
-
-    /**
-     * The default sorting direction.
-     */
-    const string SORT_DIRECTION = 'asc';
-
-    /**
      * Display a collection of all projects.
      *
      * @param  Request  $request  The incoming request.
@@ -37,7 +27,7 @@ class ProjectController extends Controller
      */
     #[QueryParameter('page', description: 'The page number to retrieve.', default: 1)]
     #[QueryParameter('sort', description: 'The field to sort by.', default: 'id')]
-    #[QueryParameter('direction', description: 'The sorting direction.', default: self::SORT_DIRECTION, example: 'desc')]
+    #[QueryParameter('direction', description: 'The sorting direction.', default: self::DEFAULT_SORT_DIRECTION, example: 'desc')]
     #[QueryParameter('per_page', description: 'The number of items per page.', default: self::PER_PAGE, example: 5)]
     public function index(Request $request): JsonResponse
     {
@@ -48,14 +38,14 @@ class ProjectController extends Controller
         if ($request->has('sort')) {
             $sortField = $request->input('sort');
 
-            $requestSortDirection = $request->has('direction') ? $request->input('direction') : self::SORT_DIRECTION;
-            $sortDirection = in_array($requestSortDirection, ['asc', 'desc']) ? $requestSortDirection : self::SORT_DIRECTION;
+            $requestSortDirection = $request->has('direction') ? $request->input('direction') : self::DEFAULT_SORT_DIRECTION;
+            $sortDirection = in_array($requestSortDirection, ['asc', 'desc']) ? $requestSortDirection : self::DEFAULT_SORT_DIRECTION;
 
             $projectsQuery->orderBy($sortField, $sortDirection);
 
             $response['sort'] = [
                 'field' => $request->input('sort'),
-                'direction' => $request->has('direction') ? $request->input('direction') : self::SORT_DIRECTION,
+                'direction' => $request->has('direction') ? $request->input('direction') : self::DEFAULT_SORT_DIRECTION,
             ];
         }
 
@@ -69,50 +59,31 @@ class ProjectController extends Controller
         ];
 
         $response['_embedded']['projects'] = $projects->toResourceCollection();
-        $response['_links'] = [
-            'self' => [
-                'href' => route('projects.index'),
-            ],
-            'create' => [
-                'method' => 'POST',
-                'href' => route('projects.store'),
-            ],
-            'next' => [
-                'href' => $projects->nextPageUrl(),
-            ],
-            'prev' => [
-                'href' => $projects->previousPageUrl(),
-            ],
-            'last' => [
-                'href' => $projects->url($projects->lastPage()),
-            ],
-        ];
+        $response['_links'] = $this->generateCollectionLinks($projects, 'project');
 
         return response()->json($response);
     }
 
     /**
-     * Handles the storage of a new project resource.
+     * Creates a new project resource.
      *
      * @param  ProjectRequest  $request  The incoming request containing validated project data.
-     * @return JsonResponse The newly created project resource.
+     * @return ProjectResource The newly created project resource.
      */
-    public function store(ProjectRequest $request): JsonResponse
+    public function store(ProjectRequest $request): ProjectResource
     {
-        $project = Project::create($request->validated());
-
-        return response()->json(new ProjectResource($project));
+        return new ProjectResource(Project::create($request->validated()));
     }
 
     /**
      * Displays the specified project resource.
      *
      * @param  Project  $project  The project instance to be displayed.
-     * @return JsonResponse The specified project resource.
+     * @return ProjectResource The specified project resource.
      */
-    public function show(Project $project): JsonResponse
+    public function show(Project $project): ProjectResource
     {
-        return response()->json(new ProjectResource($project));
+        return new ProjectResource($project);
     }
 
     /**
@@ -120,13 +91,13 @@ class ProjectController extends Controller
      *
      * @param  ProjectRequest  $request  The incoming request containing validated project data.
      * @param  Project  $project  The project instance to be updated.
-     * @return JsonResponse The updated project resource.
+     * @return ProjectResource The updated project resource.
      */
-    public function update(ProjectRequest $request, Project $project): JsonResponse
+    public function update(ProjectRequest $request, Project $project): ProjectResource
     {
         $project->update($request->validated());
 
-        return response()->json(new ProjectResource($project));
+        return new ProjectResource($project);
     }
 
     /**

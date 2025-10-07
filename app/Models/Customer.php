@@ -1,29 +1,27 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Project extends Model
+class Customer extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
-        'description',
-        'customer_id',
+        'date_of_birth',
+        'email',
     ];
 
     /**
-     * @return BelongsTo<Customer, Project>
+     * Retrieve the projects associated with the customer.
      */
-    public function customer(): BelongsTo
+    public function projects(): Customer|HasMany
     {
-        return $this->belongsTo(Customer::class);
+        return $this->hasMany(Project::class);
     }
 }
