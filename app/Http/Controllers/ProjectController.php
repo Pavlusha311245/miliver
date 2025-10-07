@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace App\Http\Controllers;
 
@@ -8,64 +8,133 @@ use App\Http\Requests\ProjectRequest;
 use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Request;
 
+/**
+ * Controller for handling project-related operations.
+ */
 class ProjectController extends Controller
 {
+    const int PER_PAGE = 10;
+
     /**
      * Display a collection of all projects.
+     *
+     * @param Request $request The incoming request.
+     * @return JsonResponse The collection of projects.
      */
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
-        return ProjectResource::collection(Project::all());
+        $response = [];
+
+        $projects = Project::query();
+
+        if ($request->has('sort')) {
+            $sortField = $request->input('sort');
+
+            $requestSortDirection = $request->has('direction') ? $request->input('direction') : 'asc';
+            $sortDirection = in_array($requestSortDirection, ['asc', 'desc']) ? $requestSortDirection : 'asc';
+
+            $projects->orderBy($sortField, $sortDirection);
+
+            $response['sort'] = [
+                'field' => $request->input('sort'),
+                'direction' => $request->has('direction') ? $request->input('direction') : 'asc',
+            ];
+        }
+
+        $projectsPagination = $projects->paginate($request->input('page', self::PER_PAGE));
+
+        $response['page'] = [
+            'current_page' => $projectsPagination->currentPage(),
+            'per_page' => $projectsPagination->perPage(),
+            'total' => $projectsPagination->total(),
+            'last_page' => $projectsPagination->lastPage(),
+        ];
+
+        $response['_embedded']['projects'] = ProjectResource::collection($projectsPagination);
+
+        $response['_links'] = [
+            'self' => [
+                'href' => route('projects.index'),
+            ],
+            'create' => [
+                'method' => 'POST',
+                'href' => route('projects.store'),
+            ],
+            'next' => [
+                'href' => $projectsPagination->nextPageUrl(),
+            ],
+            'prev' => [
+                'href' => $projectsPagination->previousPageUrl(),
+            ],
+            'last' => [
+                'href' => $projectsPagination->url($projectsPagination->lastPage()),
+            ],
+        ];
+
+        return response()->json($response);
     }
 
     /**
      * Handles the storage of a new project resource.
      *
-     * @param  ProjectRequest  $request  The incoming request containing validated project data.
-     * @return ProjectResource The newly created project resource.
+     * @param ProjectRequest $request The incoming request containing validated project data.
+     * @return JsonResponse The newly created project resource.
      */
-    public function store(ProjectRequest $request): ProjectResource
+    public function store(ProjectRequest $request): JsonResponse
     {
-        return new ProjectResource(Project::create($request->validated()));
+        $project = Project::create($request->validated());
+
+        return response()->json(new ProjectResource($project));
     }
 
     /**
      * Displays the specified project resource.
      *
-     * @param  Project  $project  The project instance to be displayed.
-     * @return ProjectResource The specified project resource.
+     * @param Project $project The project instance to be displayed.
+     * @return JsonResponse The specified project resource.
      */
-    public function show(Project $project): ProjectResource
+    public function show(Project $project): JsonResponse
     {
-        return new ProjectResource($project);
+        return response()->json(new ProjectResource($project));
     }
 
     /**
      * Updates the specified project resource with validated data.
      *
-     * @param  ProjectRequest  $request  The incoming request containing validated project data.
-     * @param  Project  $project  The project instance to be updated.
-     * @return ProjectResource The updated project resource.
+     * @param ProjectRequest $request The incoming request containing validated project data.
+     * @param Project $project The project instance to be updated.
+     * @return JsonResponse The updated project resource.
      */
-    public function update(ProjectRequest $request, Project $project): ProjectResource
+    public function update(ProjectRequest $request, Project $project): JsonResponse
     {
         $project->update($request->validated());
 
-        return new ProjectResource($project);
+        return response()->json(new ProjectResource($project));
     }
 
     /**
      * Deletes the specified project resource.
      *
-     * @param  Project  $project  The project instance to be deleted.
+     * @param Project $project The project instance to be deleted.
      * @return JsonResponse A JSON response indicating the result of the deletion.
      */
     public function destroy(Project $project): JsonResponse
     {
         $project->delete();
 
-        return response()->json();
+        return response()->json([
+            'message' => 'Project deleted successfully.',
+            '_links' => [
+                'list' => [
+                    'href' => route('projects.index'),
+                ],
+                'create' => [
+                    'method' => 'POST',
+                    'href' => route('projects.store'),
+                ],
+            ],
+        ]);
     }
 }

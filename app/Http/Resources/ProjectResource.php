@@ -17,6 +17,19 @@ class ProjectResource extends JsonResource
             'description' => $this->description,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            '_links' => [
+                'self' => [
+                    'href' => route('projects.show', ['project' => $this->id]),
+                ],
+                'update' => [
+                    'method' => 'PUT',
+                    'href' => route('projects.update', ['project' => $this->id]),
+                ],
+                'delete' => [
+                    'method' => 'DELETE',
+                    'href' => route('projects.destroy', ['project' => $this->id]),
+                ],
+            ],
         ];
     }
 }
