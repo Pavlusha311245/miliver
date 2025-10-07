@@ -17,8 +17,14 @@ use Throwable;
  */
 class ProjectController extends Controller
 {
+    /**
+     * The number of items per page.
+     */
     const int PER_PAGE = 10;
 
+    /**
+     * The default sorting direction.
+     */
     const string SORT_DIRECTION = 'asc';
 
     /**
@@ -37,7 +43,7 @@ class ProjectController extends Controller
     {
         $response = [];
 
-        $projects = Project::query();
+        $projectsQuery = Project::query();
 
         if ($request->has('sort')) {
             $sortField = $request->input('sort');
@@ -45,7 +51,7 @@ class ProjectController extends Controller
             $requestSortDirection = $request->has('direction') ? $request->input('direction') : self::SORT_DIRECTION;
             $sortDirection = in_array($requestSortDirection, ['asc', 'desc']) ? $requestSortDirection : self::SORT_DIRECTION;
 
-            $projects->orderBy($sortField, $sortDirection);
+            $projectsQuery->orderBy($sortField, $sortDirection);
 
             $response['sort'] = [
                 'field' => $request->input('sort'),
@@ -53,16 +59,16 @@ class ProjectController extends Controller
             ];
         }
 
-        $projectsPagination = $projects->paginate($request->input('page', self::PER_PAGE));
+        $projects = $projectsQuery->paginate($request->input('page', self::PER_PAGE));
 
         $response['page'] = [
-            'current_page' => $projectsPagination->currentPage(),
-            'per_page' => $projectsPagination->perPage(),
-            'total' => $projectsPagination->total(),
-            'last_page' => $projectsPagination->lastPage(),
+            'current_page' => $projects->currentPage(),
+            'per_page' => $projects->perPage(),
+            'total' => $projects->total(),
+            'last_page' => $projects->lastPage(),
         ];
 
-        $response['_embedded']['projects'] = $projectsPagination->toResourceCollection();
+        $response['_embedded']['projects'] = $projects->toResourceCollection();
         $response['_links'] = [
             'self' => [
                 'href' => route('projects.index'),
@@ -72,13 +78,13 @@ class ProjectController extends Controller
                 'href' => route('projects.store'),
             ],
             'next' => [
-                'href' => $projectsPagination->nextPageUrl(),
+                'href' => $projects->nextPageUrl(),
             ],
             'prev' => [
-                'href' => $projectsPagination->previousPageUrl(),
+                'href' => $projects->previousPageUrl(),
             ],
             'last' => [
-                'href' => $projectsPagination->url($projectsPagination->lastPage()),
+                'href' => $projects->url($projects->lastPage()),
             ],
         ];
 

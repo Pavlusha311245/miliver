@@ -31,6 +31,9 @@ class ProjectResource extends JsonResource
                     'method' => 'DELETE',
                     'href' => route('projects.destroy', ['project' => $this->id]),
                 ],
+                'list' => [
+                    'href' => route('projects.index'),
+                ],
             ],
         ];
     }
